@@ -1,1 +1,3 @@
-# CPSC340-part2
+# CPSC340-Part2
+
+Prediction on the intersection problem.
