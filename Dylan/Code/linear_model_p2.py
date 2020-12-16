@@ -34,6 +34,7 @@ def main():
     y_time_x,y_time_y = divide_time_y(df_time)
     w_x_time = solve(X_time_x.T@X_time_x, X_time_x.T@y_time_x)
     w_y_time = solve(X_time_y.T@X_time_y, X_time_y.T@y_time_y)
+    print(w_x_time,w_y_time)
 
 
     result = np.zeros((1200,1))
@@ -49,7 +50,6 @@ def main():
     for i in range(Y_x_test_1.shape[0]):
         result[i*60,0] = Y_x_test_1[i,0]
         result[1+i*60,0] = Y_y_test_1[i,0]
-    print(result)
 
     # predict X,Y for time spot 2-30
     # pre_processing_time_series_test()
@@ -64,6 +64,21 @@ def main():
     for i in range(Y_x_test_1.shape[0]):
         time_series[11,2*i] = Y_x_test_1[i,0]
         time_series[11,2*i+1] = Y_y_test_1[i,0]
+
+    for i in range(29):
+        y_x_temp = np.zeros((20,11))
+        y_y_temp = np.zeros((20,11))
+        for j in range(20):
+            y_x_temp[j,:] = time_series[i:i+11,j*2]-time_series[0,j*2]
+            y_y_temp[j,:] = time_series[i:i+11,j*2+1]-time_series[0,j*2+1]
+        y_x_test_result = y_x_temp @ w_x_time
+        y_y_test_result = y_y_temp @ w_y_time
+        for k in range(20):
+            time_series[12+i,k*2] = y_x_test_result[k,0]+time_series[0,k*2]
+            time_series[12+i,k*2+1] = y_y_test_result[k,0]+time_series[0,k*2+1]
+            result[2*(i+1)+60*k,0] = y_x_test_result[k,0]+time_series[0,k*2]
+            result[1+2*(i+1)+60*k,0] = y_y_test_result[k,0]+time_series[0,k*2+1]
+
     pd.DataFrame(time_series).to_csv("../data/time_series.csv")
 
         
@@ -164,26 +179,27 @@ def get_agent_data(df):
     return agent_df
 
 def divide_time_X(df):
-    X_time_x = np.zeros(((df.shape[0]-11)*2308,11))
-    X_time_y = np.zeros(((df.shape[0]-11)*2308,11))
+    X_time_x = np.zeros((30*2308,11))
+    X_time_y = np.zeros((30*2308,11))
     df = df.values
     for i in range(df.shape[0]):
         for j in range(df.shape[1]):
             if df[i,j]=='':
                 df[i,j]= 0
+    df = df.astype(float)
     for i in range(2308):
-        for j in range(df.shape[0]-11):
+        for j in range(30):
             if j == 0:
-                X_time_x[i*(df.shape[0]-11),:] = df[:11,i*4]
-                X_time_y[i*(df.shape[0]-11),:] = df[:11,i*4+1]
+                X_time_x[i*30,:] = df[:11,i*4]
+                X_time_y[i*30,:] = df[:11,i*4+1]
             elif j >11:
-                X_time_x[j+i*(df.shape[0]-11),:] = df[j:j+11,i*4+2]
-                X_time_y[j+i*(df.shape[0]-11),:] = df[j:j+11,i*4+3]
+                X_time_x[j+i*30,:] = df[j:j+11,i*4+2]
+                X_time_y[j+i*30,:] = df[j:j+11,i*4+3]
             else:
-                X_time_x[j+i*(df.shape[0]-11),:11-j] = df[j:11,i*4]
-                X_time_x[j+i*(df.shape[0]-11),11-j:] = df[11:11+j,i*4+2]
-                X_time_y[j+i*(df.shape[0]-11),:11-j] = df[j:11,i*4+1]
-                X_time_y[j+i*(df.shape[0]-11),11-j:] = df[11:11+j,i*4+3]
+                X_time_x[j+i*30,:11-j] = df[j:11,i*4]
+                X_time_x[j+i*30,11-j:] = df[11:11+j,i*4+2]
+                X_time_y[j+i*30,:11-j] = df[j:11,i*4+1]
+                X_time_y[j+i*30,11-j:] = df[11:11+j,i*4+3]
     return X_time_x,X_time_y
     
 def divide_time_y(df):
@@ -194,6 +210,7 @@ def divide_time_y(df):
         for j in range(df.shape[1]):
             if df[i,j]=='':
                 df[i,j]= 0
+    df = df.astype(float)
     for i in range(2308):
         y_time_x[i*(df.shape[0]-11):(i+1)*(df.shape[0]-11),0] = df[11:,i*4+2]
         y_time_y[i*(df.shape[0]-11):(i+1)*(df.shape[0]-11),0] = df[11:,i*4+3]
