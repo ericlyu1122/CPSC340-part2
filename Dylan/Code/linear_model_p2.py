@@ -80,6 +80,7 @@ def main():
             result[1+2*(i+1)+60*k,0] = y_y_test_result[k,0]+time_series[0,k*2+1]
 
     pd.DataFrame(time_series).to_csv("../data/time_series.csv")
+    pd.DataFrame(result).to_csv("../data/result.csv")
 
         
 
@@ -189,17 +190,8 @@ def divide_time_X(df):
     df = df.astype(float)
     for i in range(2308):
         for j in range(30):
-            if j == 0:
-                X_time_x[i*30,:] = df[:11,i*4]
-                X_time_y[i*30,:] = df[:11,i*4+1]
-            elif j >11:
-                X_time_x[j+i*30,:] = df[j:j+11,i*4+2]
-                X_time_y[j+i*30,:] = df[j:j+11,i*4+3]
-            else:
-                X_time_x[j+i*30,:11-j] = df[j:11,i*4]
-                X_time_x[j+i*30,11-j:] = df[11:11+j,i*4+2]
-                X_time_y[j+i*30,:11-j] = df[j:11,i*4+1]
-                X_time_y[j+i*30,11-j:] = df[11:11+j,i*4+3]
+            X_time_x[j+i*30,:] = df[j:j+11,i*4]
+            X_time_y[j+i*30,:] = df[j:j+11,i*4+1]
     return X_time_x,X_time_y
     
 def divide_time_y(df):
@@ -212,8 +204,8 @@ def divide_time_y(df):
                 df[i,j]= 0
     df = df.astype(float)
     for i in range(2308):
-        y_time_x[i*(df.shape[0]-11):(i+1)*(df.shape[0]-11),0] = df[11:,i*4+2]
-        y_time_y[i*(df.shape[0]-11):(i+1)*(df.shape[0]-11),0] = df[11:,i*4+3]
+        y_time_x[i*(df.shape[0]-11):(i+1)*(df.shape[0]-11),0] = df[11:,i*4]
+        y_time_y[i*(df.shape[0]-11):(i+1)*(df.shape[0]-11),0] = df[11:,i*4+1]
     return y_time_x,y_time_y
 
 if __name__ == "__main__":
